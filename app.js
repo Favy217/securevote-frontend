@@ -4,7 +4,7 @@ const contractABI = [
     "function castVote(bytes memory _encryptedVote) external",
     "function isVotingActive() external view returns (bool)",
     "function hasVoted(address) view returns (bool)",
-    "function getVote(address) external view returns (bytes memory)" // Remove if not redeployed
+    "function getVote(address) external view returns (bytes memory)" 
 ];
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -104,7 +104,7 @@ checkVoteButton.addEventListener("click", async () => {
         try {
             const signer = provider.getSigner();
             const userAddress = await signer.getAddress();
-            const voteData = await contract.getVote(userAddress); // Requires getVote
+            const voteData = await contract.getVote(userAddress); 
             const voteHex = ethers.utils.hexlify(voteData);
             const candidate = voteHex === "0x01" ? "Donald Trump" : "Kamala Harris";
             voteDisplay.textContent = `You voted for ${candidate}`;
