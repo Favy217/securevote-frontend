@@ -93,7 +93,7 @@ checkVoteButton.addEventListener("click", async () => {
             status.textContent = "Fetching your vote...";
             const signer = provider.getSigner();
             const userAddress = await signer.getAddress();
-            const voteData = await contract.getVote(userAddress); // Requires getVote
+            const voteData = await contract.getVote(userAddress); 
             const voteHex = ethers.utils.hexlify(voteData);
             const candidate = voteHex === "0x01" ? "Candidate A" : "Candidate B";
             voteDisplay.textContent = `You voted for ${candidate}`;
