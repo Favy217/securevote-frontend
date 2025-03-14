@@ -4,7 +4,7 @@ const contractABI = [
     "function castVote(bytes memory _encryptedVote) external",
     "function isVotingActive() external view returns (bool)",
     "function hasVoted(address) view returns (bool)",
-    "function getVote(address) external view returns (bytes memory)" // Remove if not redeployed
+    "function getVote(address) external view returns (bytes memory)" 
 ];
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -19,38 +19,34 @@ const connectWalletButton = document.getElementById("connectWallet");
 const connectedAddress = document.getElementById("connectedAddress");
 const disconnectOption = document.getElementById("disconnectOption");
 
-document.getElementById("connectWallet").addEventListener("click", async () => {
+connectWalletButton.addEventListener("click", async () => {
     try {
-        console.log("Connecting wallet...");
-        console.log("Connect button:", connectWalletButton);
-        console.log("Address span:", connectedAddress);
+        status.textContent = "Connecting...";
         await provider.send("eth_requestAccounts", []);
         const signer = provider.getSigner();
         const userAddress = await signer.getAddress();
         console.log("Connected address:", userAddress);
 
-        connectWalletButton.style.display = "none";
-        console.log("Connect button hidden");
-        connectedAddress.textContent = userAddress;
-        connectedAddress.style.display = "inline";
-        console.log("Address shown");
+        connectWalletButton.classList.add("hidden");
+        connectedAddress.textContent = truncateAddress(userAddress);
+        connectedAddress.classList.remove("hidden");
 
         const isActive = await contract.isVotingActive();
-        console.log("Voting active:", isActive);
         const hasVoted = await contract.hasVoted(userAddress);
-        console.log("Has voted:", hasVoted);
+        console.log("Voting active:", isActive, "Has voted:", hasVoted);
 
         if (hasVoted) {
-            status.textContent = "You've already voted, click the 'Check' button to view who you voted for";
-            votedSection.style.display = "block";
-            votingSection.style.display = "none";
+            status.textContent = "You've already voted, click 'Check' to see your vote";
+            votedSection.classList.remove("hidden");
+            votingSection.classList.add("hidden");
         } else if (isActive) {
-            votingSection.style.display = "block";
-            votedSection.style.display = "none";
+            status.textContent = "";
+            votingSection.classList.remove("hidden");
+            votedSection.classList.add("hidden");
         } else {
             status.textContent = "Voting has ended!";
-            votingSection.style.display = "none";
-            votedSection.style.display = "none";
+            votingSection.classList.add("hidden");
+            votedSection.classList.add("hidden");
         }
     } catch (error) {
         console.error("Connect error:", error);
@@ -59,40 +55,32 @@ document.getElementById("connectWallet").addEventListener("click", async () => {
 });
 
 connectedAddress.addEventListener("click", () => {
-    disconnectOption.style.display = disconnectOption.style.display === "none" ? "inline" : "none";
+    disconnectOption.classList.toggle("hidden");
 });
 
 disconnectOption.addEventListener("click", () => {
-    // Reset UI
-    connectWalletButton.style.display = "inline";
-    connectedAddress.style.display = "none";
-    disconnectOption.style.display = "none";
-    votingSection.style.display = "none";
-    votedSection.style.display = "none";
+    connectWalletButton.classList.remove("hidden");
+    connectedAddress.classList.add("hidden");
+    disconnectOption.classList.add("hidden");
+    votingSection.classList.add("hidden");
+    votedSection.classList.add("hidden");
     status.textContent = "";
 });
 
-document.getElementById("voteA").addEventListener("click", async () => {
-    await castVote("0x01", "Donald Trump");
-});
-
-document.getElementById("voteB").addEventListener("click", async () => {
-    await castVote("0x00", "Kamala Harris");
-});
+document.getElementById("voteA").addEventListener("click", () => castVote("0x01", "Candidate A"));
+document.getElementById("voteB").addEventListener("click", () => castVote("0x00", "Candidate B"));
 
 async function castVote(voteData, candidateName) {
     try {
-        console.log(`Voting for ${candidateName} with data: ${voteData}`);
+        status.textContent = `Submitting vote for ${candidateName}...`;
         const signer = provider.getSigner();
         const contractWithSigner = contract.connect(signer);
         const tx = await contractWithSigner.castVote(voteData);
-        console.log("Tx sent:", tx.hash);
-        status.textContent = `Voting for ${candidateName}... Tx: ${tx.hash}`;
+        status.textContent = `Transaction sent: ${truncateTx(tx.hash)}`;
         await tx.wait();
-        console.log("Tx confirmed:", tx.hash);
         status.textContent = "Congrats! Your vote has been casted";
-        votingSection.style.display = "none";
-        votedSection.style.display = "block";
+        votingSection.classList.add("hidden");
+        votedSection.classList.remove("hidden");
     } catch (error) {
         console.error("Vote error:", error);
         status.textContent = `Error: ${error.message}`;
@@ -102,20 +90,30 @@ async function castVote(voteData, candidateName) {
 checkVoteButton.addEventListener("click", async () => {
     if (checkVoteButton.textContent === "Check") {
         try {
+            status.textContent = "Fetching your vote...";
             const signer = provider.getSigner();
             const userAddress = await signer.getAddress();
             const voteData = await contract.getVote(userAddress); // Requires getVote
             const voteHex = ethers.utils.hexlify(voteData);
-            const candidate = voteHex === "0x01" ? "Donald Trump" : "Kamala Harris";
+            const candidate = voteHex === "0x01" ? "Candidate A" : "Candidate B";
             voteDisplay.textContent = `You voted for ${candidate}`;
-            voteDisplay.style.display = "block";
+            voteDisplay.classList.remove("hidden");
             checkVoteButton.textContent = "Hide Vote";
+            status.textContent = "";
         } catch (error) {
             console.error("Check vote error:", error);
             status.textContent = `Error: ${error.message}`;
         }
     } else {
-        voteDisplay.style.display = "none";
+        voteDisplay.classList.add("hidden");
         checkVoteButton.textContent = "Check";
     }
 });
+
+function truncateAddress(addr) {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+}
+
+function truncateTx(tx) {
+    return `${tx.slice(0, 6)}...${tx.slice(-4)}`;
+}

@@ -3,35 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureVote - Seismic Voting App</title>
+    <title>SecureVote - Seismic Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        button { padding: 10px 20px; margin: 5px; }
-        #status { color: green; margin-top: 10px; }
-        #voteDisplay { margin-top: 10px; display: none; }
-        #walletContainer { margin: 10px; }
-        #connectedAddress { cursor: pointer; color: blue; text-decoration: underline; }
-        #disconnectOption { display: none; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #80deea);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            color: #0277bd;
+            margin-bottom: 1rem;
+        }
+        p { color: #555; }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(90deg, #0288d1, #0277bd);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4);
+        }
+        #walletContainer { margin: 1rem 0; }
+        #connectedAddress {
+            color: #0288d1;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+        }
+        #connectedAddress:hover::after {
+            content: "Click to disconnect";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0288d1;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        #disconnectOption { display: none; background: #d32f2f; }
+        #votingSection, #votedSection { margin-top: 1.5rem; }
+        #voteDisplay {
+            display: none;
+            color: #388e3c;
+            font-weight: 600;
+        }
+        #status {
+            margin-top: 1rem;
+            padding: 10px;
+            border-radius: 10px;
+            background: #e0f2f1;
+            color: #00695c;
+            transition: opacity 0.3s;
+        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <h1>SecureVote: Presidential Election</h1>
-    <p>Connect your wallet and vote for a candidate!</p>
-    <div id="walletContainer">
-        <button id="connectWallet">Connect Wallet</button>
-        <span id="connectedAddress"></span>
-        <button id="disconnectOption">Disconnect</button>
+    <div class="container">
+        <h1>SecureVote</h1>
+        <p>Securely vote for your candidate on Seismic Chain</p>
+        <div id="walletContainer">
+            <button id="connectWallet">Connect Wallet</button>
+            <span id="connectedAddress"></span>
+            <button id="disconnectOption">Disconnect</button>
+        </div>
+        <div id="votingSection" class="hidden">
+            <h2>Choose Your Candidate</h2>
+            <button id="voteA">Vote for Candidate A</button>
+            <button id="voteB">Vote for Candidate B</button>
+        </div>
+        <div id="votedSection" class="hidden">
+            <button id="checkVote">Check</button>
+            <p id="voteDisplay"></p>
+        </div>
+        <p id="status"></p>
     </div>
-    <div id="votingSection" style="display: none;">
-        <h2>Vote for a Candidate</h2>
-        <button id="voteA">Vote for Donald Trump</button>
-        <button id="voteB">Vote for Kamala Harris</button>
-    </div>
-    <div id="votedSection" style="display: none;">
-        <button id="checkVote">Check</button>
-        <p id="voteDisplay"></p>
-    </div>
-    <p id="status"></p>
 
     <script src="./ethers-5.7.2.umd.min.js" type="text/javascript"></script>
     <script src="app.js"></script>
