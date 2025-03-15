@@ -1,11 +1,20 @@
-const contractAddress = "0x2a8E40e6857F3b0634edC4Cc9D105218Bdc04D4e"; 
+const contractAddress = "0x2a8E40e6857F3b0634edC4Cc9D105218Bdc04D4e";
 const rpcUrl = "https://node-2.seismicdev.net/rpc"; 
 const contractABI = [
     "function castVote(bytes memory _encryptedVote) external",
     "function isVotingActive() external view returns (bool)",
     "function hasVoted(address) view returns (bool)",
-    "function getVote(address) external view returns (bytes memory)" 
+    "function getVote(address) external view returns (bytes memory)" // Remove if not redeployed
 ];
+
+// Seismic Devnet network details
+const SEISMIC_DEVNET = {
+    chainId: "0x141C", // Hex Chain ID (5124 in decimal)
+    chainName: "Seismic Devnet",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://node-2.seismicdev.net/rpc"],
+    blockExplorerUrls: ["https://explorer-2.seismicdev.net"]
+};
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 const contract = new ethers.Contract(contractAddress, contractABI, provider);
@@ -23,6 +32,24 @@ connectWalletButton.addEventListener("click", async () => {
     try {
         status.textContent = "Connecting...";
         await provider.send("eth_requestAccounts", []);
+
+        // Check current network
+        const network = await provider.getNetwork();
+        const targetChainId = parseInt(SEISMIC_DEVNET.chainId, 16); // Convert hex to decimal
+        if (network.chainId !== targetChainId) {
+            try {
+                // Try switching to Seismic Devnet
+                await provider.send("wallet_switchEthereumChain", [{ chainId: SEISMIC_DEVNET.chainId }]);
+            } catch (switchError) {
+                // If chain not added, add it
+                if (switchError.code === 4902) {
+                    await provider.send("wallet_addEthereumChain", [SEISMIC_DEVNET]);
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+
         const signer = provider.getSigner();
         const userAddress = await signer.getAddress();
         console.log("Connected address:", userAddress);
@@ -93,7 +120,7 @@ checkVoteButton.addEventListener("click", async () => {
             status.textContent = "Fetching your vote...";
             const signer = provider.getSigner();
             const userAddress = await signer.getAddress();
-            const voteData = await contract.getVote(userAddress); 
+            const voteData = await contract.getVote(userAddress); // Requires getVote
             const voteHex = ethers.utils.hexlify(voteData);
             const candidate = voteHex === "0x01" ? "Candidate A" : "Candidate B";
             voteDisplay.textContent = `You voted for ${candidate}`;
