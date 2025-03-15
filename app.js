@@ -171,15 +171,16 @@ async function castVote(sessionId, voteForAlice) {
         const hasVoted = await contract.hasVotedInSession(sessionId, await signer.getAddress());
         console.log(`Has voted in session ${sessionId}:`, hasVoted);
         if (hasVoted) throw new Error("You have already voted");
-        const tx = await contractWithSigner.castVote(sessionId, voteForAlice, { gasLimit: 300000 });
+        const tx = await contractWithSigner.castVote(sessionId, voteForAlice, { gasLimit: 500000 }); // Increased gas limit
         console.log("Transaction sent, hash:", tx.hash);
-        await tx.wait();
+        const receipt = await tx.wait();
+        console.log("Transaction receipt:", receipt);
         status.textContent = "Vote cast!";
         updatePolls();
     } catch (error) {
         console.error("Voting error:", error);
         if (error.code === 'CALL_EXCEPTION' && error.receipt && error.receipt.status === 0) {
-            status.textContent = "Error: Transaction failed. Voting may not be available for this poll.";
+            status.textContent = `Error: Transaction failed. Reason may include: ${error.reason || 'Voting not available for this poll'}`;
         } else {
             status.textContent = `Error: ${error.message || error.toString()}`;
         }
