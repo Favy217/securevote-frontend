@@ -1,4 +1,4 @@
-const contractAddress = "0x2F736650ef8c2f305BFd3dd74EF8EC57284C6b38";
+const contractAddress = "0x2F736650ef8c2f305BFd3dd74EF8EC57284C6b38"; 
 const contractABI = [
     "function createSession(uint256 _startTime, uint256 _duration) external",
     "function castVote(uint256 _sessionId, bool _voteForAlice) external",
@@ -141,8 +141,8 @@ function disconnectWallet() {
 newPollButton.addEventListener("click", async () => {
     try {
         const now = Math.floor(Date.now() / 1000);
-        const startTime = now + 10; // Add 10 seconds buffer to ensure future start time
-        const duration = 604800; // 7 days
+        const startTime = now; // Immediate start for testing
+        const duration = 3600; // 1 hour for quicker testing
         console.log("Creating new poll with startTime:", startTime, "duration:", duration);
         status.textContent = "Creating new poll...";
         const signer = provider.getSigner();
@@ -171,7 +171,7 @@ async function castVote(sessionId, voteForAlice) {
         const hasVoted = await contract.hasVotedInSession(sessionId, await signer.getAddress());
         console.log(`Has voted in session ${sessionId}:`, hasVoted);
         if (hasVoted) throw new Error("You have already voted");
-        const tx = await contractWithSigner.castVote(sessionId, voteForAlice, { gasLimit: 500000 }); // Increased gas limit
+        const tx = await contractWithSigner.castVote(sessionId, voteForAlice, { gasLimit: 500000 });
         console.log("Transaction sent, hash:", tx.hash);
         const receipt = await tx.wait();
         console.log("Transaction receipt:", receipt);
