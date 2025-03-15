@@ -9,7 +9,7 @@ const contractABI = [
 
 // Seismic Devnet network details
 const SEISMIC_DEVNET = {
-    chainId: "0x141C", // Hex Chain ID (5124 in decimal)
+    chainId: "0x1404", // Hex Chain ID (5124 in decimal)
     chainName: "Seismic Devnet",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     rpcUrls: ["https://node-2.seismicdev.net/rpc"],
