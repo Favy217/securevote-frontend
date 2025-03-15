@@ -140,17 +140,21 @@ function disconnectWallet() {
 
 newPollButton.addEventListener("click", async () => {
     try {
-        const startTime = Math.floor(Date.now() / 1000);
+        const now = Math.floor(Date.now() / 1000);
+        const startTime = now + 10; // Add 10 seconds buffer to ensure future start time
         const duration = 604800; // 7 days
+        console.log("Creating new poll with startTime:", startTime, "duration:", duration);
         status.textContent = "Creating new poll...";
         const signer = provider.getSigner();
         const contractWithSigner = contract.connect(signer);
-        const tx = await contractWithSigner.createSession(startTime, duration);
+        const tx = await contractWithSigner.createSession(startTime, duration, { gasLimit: 300000 });
         await tx.wait();
+        console.log("Transaction hash:", tx.hash);
         status.textContent = "Poll created!";
         updatePolls();
     } catch (error) {
-        status.textContent = `Error: ${error.message}`;
+        console.error("New poll error:", error);
+        status.textContent = `Error: ${error.message || error.toString()}`;
     }
 });
 
@@ -171,7 +175,11 @@ async function castVote(sessionId, voteForAlice) {
         updatePolls();
     } catch (error) {
         console.error("Voting error:", error);
-        status.textContent = `Error: ${error.message}`;
+        if (error.code === 'CALL_EXCEPTION' && error.receipt && error.receipt.status === 0) {
+            status.textContent = "Error: Transaction failed. Voting may not be available for this poll.";
+        } else {
+            status.textContent = `Error: ${error.message}`;
+        }
     }
 }
 
