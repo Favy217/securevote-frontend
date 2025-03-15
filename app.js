@@ -1,4 +1,4 @@
-const contractAddress = "0x2a8E40e6857F3b0634edC4Cc9D105218Bdc04D4e"; 
+const contractAddress = "0x8558d94c7AFAd16F8556F7c4dA2aDed89f9FCffc"; 
 const contractABI = [
     "function castVote(bytes memory _encryptedVote) external",
     "function isVotingActive() external view returns (bool)",
