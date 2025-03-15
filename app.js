@@ -1,4 +1,4 @@
-const contractAddress = "0x2a8E40e6857F3b0634edC4Cc9D105218Bdc04D4e";
+const contractAddress = "0x2a8E40e6857F3b0634edC4Cc9D105218Bdc04D4e"; 
 const contractABI = [
     "function castVote(bytes memory _encryptedVote) external",
     "function isVotingActive() external view returns (bool)",
@@ -147,3 +147,4 @@ function truncateAddress(addr) {
 
 function truncateTx(tx) {
     return `${tx.slice(0, 6)}...${tx.slice(-4)}`;
+}
