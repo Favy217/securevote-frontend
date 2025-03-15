@@ -163,13 +163,16 @@ async function castVote(sessionId, voteForAlice) {
         status.textContent = `Voting for ${voteForAlice ? "Alice" : "Bob"}...`;
         const signer = provider.getSigner();
         const contractWithSigner = contract.connect(signer);
-        const [startTime, endTime] = await contract.getSession(sessionId);
+        const [startTime, endTime, , , isEnded] = await contract.getSession(sessionId);
         const now = Math.floor(Date.now() / 1000);
-        if (now >= endTime) throw new Error("Voting period has ended");
+        console.log(`Voting check for session ${sessionId}:`, { startTime, endTime, now, isEnded });
+        if (isEnded) throw new Error("Voting period has ended");
         if (now < startTime) throw new Error("Voting period has not started");
         const hasVoted = await contract.hasVotedInSession(sessionId, await signer.getAddress());
+        console.log(`Has voted in session ${sessionId}:`, hasVoted);
         if (hasVoted) throw new Error("You have already voted");
         const tx = await contractWithSigner.castVote(sessionId, voteForAlice, { gasLimit: 300000 });
+        console.log("Transaction sent, hash:", tx.hash);
         await tx.wait();
         status.textContent = "Vote cast!";
         updatePolls();
@@ -178,7 +181,7 @@ async function castVote(sessionId, voteForAlice) {
         if (error.code === 'CALL_EXCEPTION' && error.receipt && error.receipt.status === 0) {
             status.textContent = "Error: Transaction failed. Voting may not be available for this poll.";
         } else {
-            status.textContent = `Error: ${error.message}`;
+            status.textContent = `Error: ${error.message || error.toString()}`;
         }
     }
 }
