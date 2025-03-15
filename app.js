@@ -60,31 +60,36 @@ async function updatePolls() {
 
     for (let i = 0; i < sessionCount; i++) {
         console.log("Fetching session:", i);
-        const [startTime, endTime, aliceVotes, bobVotes, isEnded] = await contract.getSession(i);
-        console.log(`Session #${i}:`, { startTime, endTime, aliceVotes, bobVotes, isEnded });
-        const sessionCard = document.createElement("div");
-        sessionCard.className = "vote-card";
-        sessionCard.innerHTML = `
-            <p>Poll #${i}</p>
-            <p>Start: ${new Date(startTime * 1000).toLocaleString()}</p>
-            <p>End: ${new Date(endTime * 1000).toLocaleString()}</p>
-            <p>Alice: ${aliceVotes} | Bob: ${bobVotes}</p>
-        `;
+        try {
+            const [startTime, endTime, aliceVotes, bobVotes, isEnded] = await contract.getSession(i);
+            console.log(`Session #${i}:`, { startTime, endTime, aliceVotes, bobVotes, isEnded });
+            if (startTime == 0 && endTime == 0) continue; // Skip non-existent sessions
+            const sessionCard = document.createElement("div");
+            sessionCard.className = "vote-card";
+            sessionCard.innerHTML = `
+                <p>Poll #${i}</p>
+                <p>Start: ${new Date(startTime * 1000).toLocaleString()}</p>
+                <p>End: ${new Date(endTime * 1000).toLocaleString()}</p>
+                <p>Alice: ${aliceVotes} | Bob: ${bobVotes}</p>
+            `;
 
-        if (!isEnded && now >= startTime) {
-            const hasVoted = await contract.hasVotedInSession(i, (await provider.getSigner().getAddress()));
-            console.log(`User has voted in #${i}:`, hasVoted);
-            if (!hasVoted) {
-                sessionCard.innerHTML += `
-                    <button onclick="castVote(${i}, true)">Vote Alice</button>
-                    <button onclick="castVote(${i}, false)">Vote Bob</button>
-                `;
+            if (!isEnded && now >= startTime) {
+                const hasVoted = await contract.hasVotedInSession(i, (await provider.getSigner().getAddress()));
+                console.log(`User has voted in #${i}:`, hasVoted);
+                if (!hasVoted) {
+                    sessionCard.innerHTML += `
+                        <button onclick="castVote(${i}, true)">Vote Alice</button>
+                        <button onclick="castVote(${i}, false)">Vote Bob</button>
+                    `;
+                }
+                sessionCard.innerHTML += `<p>Time remaining: ${formatTime(endTime - now)}</p>`;
+                ongoingPolls.appendChild(sessionCard);
+            } else {
+                sessionCard.innerHTML += `<p>Ended: ${formatTime(now - endTime)} ago</p>`;
+                archivedPolls.appendChild(sessionCard);
             }
-            sessionCard.innerHTML += `<p>Time remaining: ${formatTime(endTime - now)}</p>`;
-            ongoingPolls.appendChild(sessionCard);
-        } else {
-            sessionCard.innerHTML += `<p>Ended: ${formatTime(now - endTime)} ago</p>`;
-            archivedPolls.appendChild(sessionCard);
+        } catch (error) {
+            console.error(`Error fetching session #${i}:`, error);
         }
     }
 }
@@ -154,17 +159,19 @@ async function castVote(sessionId, voteForAlice) {
         status.textContent = `Voting for ${voteForAlice ? "Alice" : "Bob"}...`;
         const signer = provider.getSigner();
         const contractWithSigner = contract.connect(signer);
+        const [startTime, endTime] = await contract.getSession(sessionId);
+        const now = Math.floor(Date.now() / 1000);
+        if (now >= endTime) throw new Error("Voting period has ended");
+        if (now < startTime) throw new Error("Voting period has not started");
+        const hasVoted = await contract.hasVotedInSession(sessionId, await signer.getAddress());
+        if (hasVoted) throw new Error("You have already voted");
         const tx = await contractWithSigner.castVote(sessionId, voteForAlice, { gasLimit: 300000 });
         await tx.wait();
         status.textContent = "Vote cast!";
         updatePolls();
     } catch (error) {
         console.error("Voting error:", error);
-        if (error.reason === "execution reverted") {
-            status.textContent = "Error: Voting period may have ended or you already voted.";
-        } else {
-            status.textContent = `Error: ${error.message}`;
-        }
+        status.textContent = `Error: ${error.message}`;
     }
 }
 
